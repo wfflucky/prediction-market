@@ -185,7 +185,8 @@ export default function SportsLayoutShell({
   const useIndependentColumns = context.mode === 'live'
     || (
       context.mode === 'all'
-      && (context.section === 'games' || context.isEventRoute)
+      && context.section === 'games'
+      && !context.isEventRoute
     )
   const headerInsideGamesCenter = !context.isEventRoute
     && (
