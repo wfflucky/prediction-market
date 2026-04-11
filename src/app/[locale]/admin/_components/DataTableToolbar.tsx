@@ -62,6 +62,8 @@ function DataTableToolbarInner<TData>({
       return
     }
 
+    lastSubmittedSearchRef.current = searchRef.current
+
     debounceTimeoutRef.current = window.setTimeout(() => {
       const hasExternalSearchOverride = searchRef.current !== lastSubmittedSearchRef.current
       if (hasExternalSearchOverride) {
