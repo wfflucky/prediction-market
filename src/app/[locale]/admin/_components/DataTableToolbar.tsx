@@ -38,6 +38,9 @@ function DataTableToolbarInner<TData>({
   const t = useExtracted()
   const [searchInput, setSearchInput] = useState(search)
   const debounceTimeoutRef = useRef<number | null>(null)
+  const lastSubmittedSearchRef = useRef(search)
+  const searchRef = useRef(search)
+  searchRef.current = search
 
   useEffect(() => {
     return () => {
@@ -52,6 +55,7 @@ function DataTableToolbarInner<TData>({
 
     if (debounceTimeoutRef.current !== null) {
       window.clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
     }
 
     if (nextSearch === search) {
@@ -59,13 +63,24 @@ function DataTableToolbarInner<TData>({
     }
 
     debounceTimeoutRef.current = window.setTimeout(() => {
+      const hasExternalSearchOverride = searchRef.current !== lastSubmittedSearchRef.current
+      if (hasExternalSearchOverride) {
+        debounceTimeoutRef.current = null
+        return
+      }
+
+      lastSubmittedSearchRef.current = nextSearch
       onSearchChange(nextSearch)
       debounceTimeoutRef.current = null
     }, 300)
   }
 
   const resolvedSearchPlaceholder = searchPlaceholder ?? t('Search...')
-  const isFiltered = searchInput.length > 0
+  const showPendingSearchInput
+    = debounceTimeoutRef.current !== null
+      && search === lastSubmittedSearchRef.current
+  const resolvedSearchInput = showPendingSearchInput ? searchInput : search
+  const isFiltered = resolvedSearchInput.length > 0
   const selectedRowsCount = table.getFilteredSelectedRowModel().rows.length
   const selectionSummary = enableSelection && selectedRowsCount > 0
     ? (
@@ -86,6 +101,7 @@ function DataTableToolbarInner<TData>({
               window.clearTimeout(debounceTimeoutRef.current)
               debounceTimeoutRef.current = null
             }
+            lastSubmittedSearchRef.current = ''
             setSearchInput('')
             onSearchChange('')
           }}
@@ -120,7 +136,7 @@ function DataTableToolbarInner<TData>({
           )}
           <Input
             placeholder={resolvedSearchPlaceholder}
-            value={searchInput}
+            value={resolvedSearchInput}
             onChange={event => handleSearchInputChange(event.target.value)}
             className={cn(
               'h-8 w-full',
@@ -149,7 +165,7 @@ function DataTableToolbarInner<TData>({
             )}
             <Input
               placeholder={resolvedSearchPlaceholder}
-              value={searchInput}
+              value={resolvedSearchInput}
               onChange={event => handleSearchInputChange(event.target.value)}
               className={cn(
                 'h-8 w-full sm:w-37.5 lg:w-62.5',
@@ -171,5 +187,5 @@ function DataTableToolbarInner<TData>({
 }
 
 export function DataTableToolbar<TData>(props: DataTableToolbarProps<TData>) {
-  return <DataTableToolbarInner key={props.search} {...props} />
+  return <DataTableToolbarInner {...props} />
 }
