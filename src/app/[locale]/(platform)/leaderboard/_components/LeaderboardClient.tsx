@@ -332,6 +332,14 @@ export default function LeaderboardClient({ initialFilters }: { initialFilters: 
     () => (user?.proxy_wallet_address ?? user?.address ?? '').trim(),
     [user?.address, user?.proxy_wallet_address],
   )
+  const currentFilters = useMemo<LeaderboardFilters>(
+    () => ({
+      category: filters.category,
+      period: filters.period,
+      order: filters.order,
+    }),
+    [filters.category, filters.period, filters.order],
+  )
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -365,11 +373,11 @@ export default function LeaderboardClient({ initialFilters }: { initialFilters: 
       })
       .then(async (result) => {
         const normalized = normalizeLeaderboardResponse(result)
-        const hydrated = await hydrateEntriesWithPortfolioPnl(normalized, filters, controller.signal)
+        const hydrated = await hydrateEntriesWithPortfolioPnl(normalized, currentFilters, controller.signal)
         if (controller.signal.aborted) {
           return
         }
-        setEntries(sortEntriesForDisplay(hydrated, filters, page))
+        setEntries(sortEntriesForDisplay(hydrated, currentFilters, page))
       })
       .catch((_error) => {
         if (controller.signal.aborted) {
@@ -384,7 +392,7 @@ export default function LeaderboardClient({ initialFilters }: { initialFilters: 
       })
 
     return () => controller.abort()
-  }, [filters.category, filters.period, filters.order, searchQuery, page, leaderboardRequestKey])
+  }, [filters.category, filters.period, filters.order, searchQuery, page, leaderboardRequestKey, currentFilters])
 
   useEffect(() => {
     if (!userAddress) {
@@ -417,7 +425,7 @@ export default function LeaderboardClient({ initialFilters }: { initialFilters: 
           return
         }
 
-        const [hydrated] = await hydrateEntriesWithPortfolioPnl([entry], filters, controller.signal)
+        const [hydrated] = await hydrateEntriesWithPortfolioPnl([entry], currentFilters, controller.signal)
         if (controller.signal.aborted) {
           return
         }
@@ -431,7 +439,7 @@ export default function LeaderboardClient({ initialFilters }: { initialFilters: 
       })
 
     return () => controller.abort()
-  }, [filters.category, filters.period, filters.order, userAddress])
+  }, [filters.category, filters.period, filters.order, userAddress, currentFilters])
 
   useEffect(() => {
     const category = resolveCategoryApiValue(filters.category)
