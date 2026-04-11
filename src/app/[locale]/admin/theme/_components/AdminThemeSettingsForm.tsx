@@ -10,7 +10,7 @@ import type { ThemeOverrides, ThemeToken } from '@/lib/theme'
 import { ChevronDown, RotateCcw } from 'lucide-react'
 import { useExtracted } from 'next-intl'
 import Form from 'next/form'
-import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
+import { useActionState, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { updateThemeSettingsAction } from '@/app/[locale]/admin/theme/_actions/update-theme-settings'
 import SiteLogoIcon from '@/components/SiteLogoIcon'
@@ -625,10 +625,18 @@ function ThemeTokenMatrix({
   darkParseError: string | null
 }) {
   const t = useExtracted()
-  const { lightValues: baseLightValues, darkValues: baseDarkValues } = useMemo(
-    () => resolveBaseThemeValues(presetId),
-    [presetId],
-  )
+  const [baseThemeValues, setBaseThemeValues] = useState<{
+    lightValues: ThemeOverrides
+    darkValues: ThemeOverrides
+  }>({
+    lightValues: {},
+    darkValues: {},
+  })
+  const { lightValues: baseLightValues, darkValues: baseDarkValues } = baseThemeValues
+
+  useLayoutEffect(() => {
+    setBaseThemeValues(resolveBaseThemeValues(presetId))
+  }, [presetId])
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {}
     TOKEN_GROUPS.forEach((group) => {
