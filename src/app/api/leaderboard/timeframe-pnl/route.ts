@@ -129,6 +129,9 @@ function parseUserPnlValue(payload: unknown, relative: boolean): number | null {
 
   const start = points[0]
   const end = points.at(-1)
+  if (typeof start !== 'number' || typeof end !== 'number') {
+    return null
+  }
   return relative ? end - start : end
 }
 
